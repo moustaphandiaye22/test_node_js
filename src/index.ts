@@ -1,0 +1,38 @@
+import express from "express";
+import swaggerUi from "swagger-ui-express";
+import swaggerJsdoc from "swagger-jsdoc";
+import todoroute from "./routes/todoRoute.js";
+import userroute from "./routes/userRoute.js";
+import authroute from "./routes/authRoute.js";
+import historiqueRouter from "./routes/historiqueRoute.js";
+const app = express();
+app.use("/assets", express.static("assets"));
+const swaggerOptions = {
+    definition: {
+        openapi: "3.0.0",
+        info: {
+            title: "Todo API",
+            version: "1.0.0",
+            description: "API pour la gestion des todos"
+        },
+        servers: [
+            { url: "http://localhost:3010" }
+        ]
+    },
+    apis: ["./src/routes/*.ts"]
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
+const port = 3010;
+
+app.use(express.json());
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/todos', todoroute);
+app.use('/users', userroute);
+app.use('/auth', authroute);
+app.use('/historique', historiqueRouter);
+
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+})
