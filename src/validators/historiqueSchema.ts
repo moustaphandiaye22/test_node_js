@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { ErreurMessages } from "../utils/errorMessage.js";
+import { ErrorMessages } from "../utils/errorMessage.js";
 
 
 export const historiqueSchema = z.object({
-    action: z.string().min(2, ErreurMessages.missingAction),
-    userId: z.number().min(1, ErreurMessages.missingUserId),
-    todoId: z.number().min(1, ErreurMessages.missingTodoId),
-    timestamp: z.string().min(2, ErreurMessages.missingTimestamp)
+    action: z.string().min(2, ErrorMessages.HISTO_MISSING_FIELDS),
+    userId: z.number().min(1, ErrorMessages.HISTO_MISSING_FIELDS),
+    todoId: z.number().min(1, ErrorMessages.HISTO_MISSING_FIELDS),
+    timestamp: z.string().min(2, ErrorMessages.HISTO_MISSING_FIELDS)
 })
 
 export type HistoriqueInput = z.infer<typeof historiqueSchema>;

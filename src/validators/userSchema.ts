@@ -1,10 +1,10 @@
 import { z } from  "zod";
-import { ErreurMessages } from "../utils/errorMessage.js";
+import { ErrorMessages } from "../utils/errorMessage.js";
 
 export const CreateUserSchema = z.object({
-    email: z.string().email().min(2, ErreurMessages.missingEmail),
-    password: z.string().min(2, ErreurMessages.missingPassword),
-    name: z.string().min(2, ErreurMessages.missingName),
-    role: z.enum(["USER", "ADMIN"], { error: ErreurMessages.missingRole })
+    email: z.string().email().min(2, ErrorMessages.AUTH_MISSING_EMAIL),
+    password: z.string().min(2, ErrorMessages.AUTH_MISSING_PASSWORD),
+    name: z.string().min(2, ErrorMessages.USER_MISSING_NAME),
+    role: z.enum(["USER", "ADMIN"], { error: ErrorMessages.USER_MISSING_ROLE })
 })
-export const updateCUserSchema = CreateUserSchema.partial();
+export const UpdateUserSchema = CreateUserSchema.partial();

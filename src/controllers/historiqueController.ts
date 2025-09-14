@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
 import { HistoriqueService } from "../services/historiqueService.js";
+import { ErrorMessages } from "../utils/errorMessage.js";
+import { HttpStatus } from "../utils/httpStatus.js";
 const historiqueService = new HistoriqueService();
 
 export class HistoriqueController {
@@ -8,7 +10,7 @@ export class HistoriqueController {
             const historiques = await historiqueService.findAll();
             res.json(historiques);
         } catch (error: any) {
-            res.status(500).json({ error: error.message });
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.SERVER_ERROR });
         }
     }
 
@@ -16,7 +18,7 @@ export class HistoriqueController {
         try {
             const { userId, action, todoId, timestamp } = req.body;
             if (!userId || !action || !todoId || !timestamp) {
-                return res.status(400).json({ error: "Champs requis manquants" });
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: ErrorMessages.HISTO_MISSING_FIELDS });
             }
             const newHistorique = await historiqueService.create({
                 userId,
@@ -24,18 +26,18 @@ export class HistoriqueController {
                 todoId,
                 timestamp: new Date(timestamp),
             });
-            res.status(201).json(newHistorique);
+            res.status(HttpStatus.CREATED).json(newHistorique);
         } catch (error: any) {
-            res.status(400).json({ error: error.message });
+            res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
         }
     }
     static async delete(req: Request, res: Response) {
         try {
             const id: number = Number(req.params.id);
             const deleted = await historiqueService.delete(id);
-            res.status(204).json(deleted);
+            res.status(HttpStatus.NO_CONTENT).json(deleted);
         } catch (error: any) {
-            res.status(400).json({ error: error.message });
+            res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
         }
     }
     static async update(req: Request, res: Response) {
@@ -43,9 +45,9 @@ export class HistoriqueController {
             const id: number = Number(req.params.id);
             const { userId, action, todoId, timestamp } = req.body;
             const updated = await historiqueService.update(id, { userId, action, todoId, timestamp });
-            res.status(200).json(updated);
+            res.status(HttpStatus.OK).json(updated);
         } catch (error: any) {
-            res.status(400).json({ error: error.message });
+            res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
         }
     }
 }

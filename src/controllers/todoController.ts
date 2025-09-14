@@ -1,11 +1,12 @@
 import type { Request, Response } from "express";
 import { HistoriqueService } from "../services/historiqueService.js";
+import { ErrorMessages } from "../utils/errorMessage.js";
+import { HttpStatus } from "../utils/httpStatus.js";
 interface AuthenticatedRequest extends Request {
     user?: {
         id: number;
     };
 }
-// Utilisation de l'inférence TypeScript pour le type Todo
 import { TodoService } from "../services/todoService.js";
 import { CreateTodoSchema } from "../validators/todoSchema.js"; 
 const mnservice = new TodoService();
@@ -17,15 +18,15 @@ export class todoController {
             const todoId: number = Number(req.params.id);
             const { userId, canEdit, canDelete } = req.body;
             if (!userId) {
-                return res.status(400).json({ error: "userId requis" });
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: ErrorMessages.TODO_USERID_REQUIRED });
             }
             const todo = await mnservice.findTodoById(todoId);
             if (!todo) {
-                return res.status(404).json({ error: "Todo non trouvé" });
+                return res.status(HttpStatus.NOT_FOUND).json({ error: ErrorMessages.TODO_NOT_FOUND });
             }
             // Seul le propriétaire peut partager
             if (todo.userId !== req.user?.id) {
-                return res.status(403).json({ error: "Seul le propriétaire peut partager" });
+                return res.status(HttpStatus.FORBIDDEN).json({ error: ErrorMessages.TODO_OWNER_ONLY_SHARE });
             }
             const share = await mnservice.shareTodo(todoId, userId, !!canEdit, !!canDelete);
             await historiqueService.create({
@@ -34,9 +35,9 @@ export class todoController {
                 todoId: todoId,
                 timestamp: new Date()
             });
-            res.status(201).json(share);
+            res.status(HttpStatus.CREATED).json(share);
         } catch (error: any) {
-            res.status(400).json({ error: error.message });
+            res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
         }
     }
     static async complete(req: Request, res: Response) {
@@ -44,7 +45,7 @@ export class todoController {
             const id: number = Number(req.params.id);
             const existing = await mnservice.findTodoById(id);
             if (!existing) {
-                return res.status(404).json({ error: "Todo non trouvé" });
+                return res.status(HttpStatus.NOT_FOUND).json({ error: ErrorMessages.TODO_NOT_FOUND });
             }
             const todo = await mnservice.updateTodo(id, { completed: true });
             await historiqueService.create({
@@ -55,7 +56,7 @@ export class todoController {
             });
             res.json(todo);
         } catch (error: any) {
-            res.status(400).json({ error: error.message });
+            res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
         }
     }
     static async getAll(_req: Request, res: Response) {
@@ -63,7 +64,7 @@ export class todoController {
             const mnusers = await mnservice.getAllTodos();
             res.json(mnusers);
         } catch (error: any) {
-            res.status(500).json({ error: error.message });
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.SERVER_ERROR });
         }
     }
 
@@ -72,11 +73,11 @@ export class todoController {
             const id: number = Number(req.params.id);
             const mntodo = await mnservice.findTodoById(id);
             if (!mntodo) {
-                return res.status(404).json({ error: "Todo non trouvé" });
+                return res.status(HttpStatus.NOT_FOUND).json({ error: ErrorMessages.TODO_NOT_FOUND });
             }
             return res.json(mntodo);
         } catch (error: any) {
-           return res.status(400).json({ error: error.message });
+           return res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
         }
     }
     
@@ -90,10 +91,10 @@ export class todoController {
                 todoId: mntodo.id,
                 timestamp: new Date()
             });
-            res.status(201).json(mntodo);
+            res.status(HttpStatus.CREATED).json(mntodo);
         } catch (error: any) {
             const errors = error.errors ?? [{ message: error.message }];
-            res.status(400).json({ errors });
+            res.status(HttpStatus.BAD_REQUEST).json({ errors });
         }
     }
 
@@ -111,7 +112,7 @@ export class todoController {
             res.json(mntodo);
         } catch (error: any) {
             const errors = error.errors ?? [{ message: error.message }];
-            res.status(400).json({ errors });
+            res.status(HttpStatus.BAD_REQUEST).json({ errors });
         }
     }
 
@@ -125,9 +126,9 @@ export class todoController {
                 todoId: id,
                 timestamp: new Date()
             });
-            res.status(204).send();
+            res.status(HttpStatus.NO_CONTENT).send();
         } catch (error: any) {
-            res.status(400).json({ error: error.message });
+            res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
         }
     }
 }

@@ -1,6 +1,8 @@
 import { TodoRepository } from "../repositories/todoRepository.js";
 
 import type { Request, Response, NextFunction } from "express";
+import { ErrorMessages } from "../utils/errorMessage.js";
+import { HttpStatus } from "../utils/httpStatus.js";
 
 // Typage local pour inclure la propriété user sur Request
 interface AuthenticatedRequest extends Request {
@@ -20,7 +22,7 @@ export const todoAccess = async (req: AuthenticatedRequest, res: Response, next:
   const todoId = req.params.id;
   const userId = req.user?.id;
   if (!todoId || !userId) {
-    return res.status(400).json({ error: "BAD_REQUEST", message: "ID de tâche ou utilisateur manquant." });
+    return res.status(HttpStatus.BAD_REQUEST).json({ error: ErrorMessages.BAD_REQUEST });
   }
   
 
@@ -28,7 +30,7 @@ export const todoAccess = async (req: AuthenticatedRequest, res: Response, next:
   const todoRepo = new TodoRepository();
   const todo = await todoRepo.findById(Number(todoId));
     if (!todo) {
-      return res.status(404).json({ error: "NOT_FOUND", message: "Tâche non trouvée." });
+      return res.status(HttpStatus.NOT_FOUND).json({ error: ErrorMessages.TODO_NOT_FOUND });
     }
     if (todo.userId === Number(userId)) {
       return next();
@@ -38,8 +40,8 @@ export const todoAccess = async (req: AuthenticatedRequest, res: Response, next:
     if (share && ((req.method === "PUT" && share.canEdit) || (req.method === "DELETE" && share.canDelete))) {
       return next();
     }
-    return res.status(403).json({ error: "FORBIDDEN", message: "Vous n'avez pas les droits nécessaires sur cette tâche." });
+    return res.status(HttpStatus.FORBIDDEN).json({ error: ErrorMessages.FORBIDDEN });
   } catch (err) {
-    return res.status(500).json({ error: "SERVER_ERROR", message: "Erreur serveur." });
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.SERVER_ERROR });
   }
 };

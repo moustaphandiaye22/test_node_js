@@ -1,8 +1,9 @@
 import type { Request, Response } from "express";
-// Utilisation de l'inférence TypeScript pour le type Todo
 import { UserService } from "../services/userService.js";
 import { CreateTodoSchema } from "../validators/todoSchema.js"; 
 import { CreateUserSchema } from "../validators/userSchema.js";
+import { ErrorMessages } from "../utils/errorMessage.js";
+import { HttpStatus } from "../utils/httpStatus.js";
 const mnservice = new UserService();
 
 export class UserController {
@@ -11,27 +12,26 @@ export class UserController {
             const id: number = Number(req.params.id);
             const file = (req as any).file as Express.Multer.File | undefined;
             if (!file) {
-                return res.status(400).json({ error: "Aucune image envoyée" });
+                return res.status(HttpStatus.BAD_REQUEST).json({ error: ErrorMessages.USER_IMAGE_REQUIRED });
             }
             const imageUrl = `/assets/${file.filename}`;
             const mnuser = await mnservice.updateUser(id, { imageUrl });
-            res.json({ message: "Image uploadée", imageUrl, user: mnuser });
+            res.json({ message: ErrorMessages.USER_IMAGE_UPLOADED, imageUrl, user: mnuser });
         } catch (error: any) {
-            res.status(400).json({ error: error.message });
+            res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
         }
     }
    
     static async getAll(_req: Request, res: Response) {
         try {
             const mnusers = await mnservice.getAllUsers();
-            // Ajout de l'URL complète de l'image pour chaque utilisateur
             const usersWithImageUrl = mnusers.map((user: any) => ({
                 ...user,
                 imageUrl: user.imageUrl ? `${_req.protocol}://${_req.get('host')}${user.imageUrl}` : null
             }));
             res.json(usersWithImageUrl);
         } catch (error: any) {
-            res.status(500).json({ error: error.message });
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.SERVER_ERROR });
         }
     }
 
@@ -40,13 +40,12 @@ export class UserController {
             const id: number = Number(req.params.id);
             const mnuser = await mnservice.findUserById(id);
             if (!mnuser) {
-                return res.status(404).json({ error: "User non trouvé" });
+                return res.status(HttpStatus.NOT_FOUND).json({ error: ErrorMessages.USER_NOT_FOUND });
             }
-            // Ajout de l'URL complète de l'image si elle existe
             let imageUrl = mnuser.imageUrl ? `${req.protocol}://${req.get('host')}${mnuser.imageUrl}` : null;
             return res.json({ ...mnuser, imageUrl });
         } catch (error: any) {
-           return res.status(400).json({ error: error.message });
+           return res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
         }
     }
     
@@ -54,10 +53,10 @@ export class UserController {
         try {
             const mndata = CreateUserSchema.parse(req.body);
             const mnuser = await mnservice.createUser(mndata);
-            res.status(201).json(mnuser);
+            res.status(HttpStatus.CREATED).json(mnuser);
         } catch (error: any) {
             const errors = error.errors ?? [{ message: error.message }];
-            res.status(400).json({ errors });
+            res.status(HttpStatus.BAD_REQUEST).json({ errors });
         }
     }
 
@@ -69,7 +68,7 @@ export class UserController {
             res.json(mnuser);
         } catch (error: any) {
             const errors = error.errors ?? [{ message: error.message }];
-            res.status(400).json({ errors });
+            res.status(HttpStatus.BAD_REQUEST).json({ errors });
         }
     }
 
@@ -77,9 +76,9 @@ export class UserController {
         try {
             const id: number = Number(req.params.id);
             await mnservice.deleteUser(id);
-            res.status(204).send();
+            res.status(HttpStatus.NO_CONTENT).send();
         } catch (error: any) {
-            res.status(400).json({ error: error.message });
+            res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
         }
     }
 }

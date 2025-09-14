@@ -1,7 +1,8 @@
 import { verifyAccessToken } from '../auth/jwt.js';
 import type { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
-
+import { HttpStatus } from '../utils/httpStatus.js';
+import { ErrorMessages } from '../utils/errorMessage.js';
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: number;
@@ -13,7 +14,7 @@ export interface AuthenticatedRequest extends Request {
 export const requireAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Token manquant ou invalide' });
+    return res.status(HttpStatus.UNAUTHORIZED).json({ error: ErrorMessages.UNAUTHORIZED });
   }
   const token = authHeader.split(' ')[1] as string;
   try {
@@ -21,7 +22,7 @@ export const requireAuth = async (req: AuthenticatedRequest, res: Response, next
     const prisma = new PrismaClient();
     const userFound = await prisma.user.findUnique({ where: { email: payload.email } });
     if (!userFound) {
-      return res.status(401).json({ error: 'Utilisateur non trouvé' });
+      return res.status(HttpStatus.UNAUTHORIZED).json({ error: ErrorMessages.UNAUTHORIZED });
     }
     req.user = {
       id: userFound.id,
@@ -30,6 +31,6 @@ export const requireAuth = async (req: AuthenticatedRequest, res: Response, next
     };
     next();
   } catch (err) {
-    return res.status(401).json({ error: 'Token invalide' });
+    return res.status(HttpStatus.UNAUTHORIZED).json({ error: ErrorMessages.UNAUTHORIZED });
   }
 };

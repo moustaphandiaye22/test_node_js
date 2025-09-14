@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../auth/jwt.js';
 import type { JwtPayload } from '../auth/jwt.js';
-import { ErreurMessages } from "../utils/errorMessage.js";
+import { ErrorMessages } from "../utils/errorMessage.js";
 
 const prisma = new PrismaClient();
 
@@ -26,13 +26,13 @@ export class authRepository {
     });
 
     if (!userFound) {
-      throw new Error(ErreurMessages.LOGIN_PASSWORD_INCORECT);
+      throw new Error(ErrorMessages.AUTH_INVALID_CREDENTIALS);
     }
 
     // Vérifier le mot de passe
     const isPasswordValid = await bcrypt.compare(password, userFound.password);
     if (!isPasswordValid) {
-      throw new Error(ErreurMessages.LOGIN_PASSWORD_INCORECT);
+      throw new Error(ErrorMessages.AUTH_INVALID_CREDENTIALS);
     }
 
     // Préparer le payload JWT
@@ -53,7 +53,7 @@ export class authRepository {
     // Vérifie et décode le refreshToken
     const payload = verifyRefreshToken(refreshToken);
     if (!payload) {
-    throw new Error(ErreurMessages.REFRESH_TOKEN_INVALID ?? "Refresh token invalide");
+      throw new Error(ErrorMessages.AUTH_REFRESH_TOKEN_INVALID);
     }
     const accessToken = generateAccessToken(payload);
     return { accessToken };
