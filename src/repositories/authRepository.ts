@@ -14,6 +14,8 @@ export interface LoginCredentials {
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
+  userId?: number;
+  role?: string;
 }
 
 export class authRepository {
@@ -45,8 +47,8 @@ export class authRepository {
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
 
-    // Retourner la réponse
-    return { accessToken, refreshToken };
+    // Retourner la réponse avec userId et role
+    return { accessToken, refreshToken, userId: userFound.id, role: userFound.role };
   }    
 
   static async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {

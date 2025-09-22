@@ -10,7 +10,7 @@ const mnrouter = Router();
 
 mnrouter.get("/", requireAuth, todoAccess, todoController.getAll);
 mnrouter.get("/:id", requireAuth, todoAccess, todoController.findById);
-mnrouter.post("/", requireAuth, todoAccess, todoController.create);
+mnrouter.post("/", requireAuth, todoController.create);
 mnrouter.put("/:id", requireAuth, todoAccess, todoController.update);
 mnrouter.delete("/:id", requireAuth, todoAccess, todoController.delete);
 mnrouter.patch("/:id/complete", requireAuth, todoAccess, todoController.complete);

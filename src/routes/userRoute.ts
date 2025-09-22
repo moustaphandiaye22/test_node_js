@@ -1,3 +1,4 @@
+
 import { Router } from "express";
 import { UserController } from "../controllers/userController.js";
 import multer from "multer";
@@ -19,7 +20,8 @@ mnrouter.post('/:id/upload-image', upload.single('image'), UserController.upload
 
 mnrouter.get("/", UserController.getAll);
 mnrouter.get("/:id", UserController.findById);
-mnrouter.post("/", UserController.create);
+	mnrouter.post("/", upload.single("image"), UserController.create);
 mnrouter.put("/:id", UserController.update);
 mnrouter.delete("/:id", UserController.delete);
+mnrouter.get('/:id/shared-todos', UserController.getSharedTodos);
 export default mnrouter;

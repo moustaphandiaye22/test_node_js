@@ -4,6 +4,8 @@ import { CreateTodoSchema } from "../validators/todoSchema.js";
 import { CreateUserSchema } from "../validators/userSchema.js";
 import { ErrorMessages } from "../utils/errorMessage.js";
 import { HttpStatus } from "../utils/httpStatus.js";
+import { UserRepository } from '../repositories/userRepository.js';
+
 const mnservice = new UserService();
 
 export class UserController {
@@ -51,9 +53,16 @@ export class UserController {
     
     static async create(req: Request, res: Response) {
         try {
-            const mndata = CreateUserSchema.parse(req.body);
+            let mndata = req.body;
+            if ((req as any).file) {
+                mndata.imageUrl = `/assets/${(req as any).file.filename}`;
+            }
+            mndata = CreateUserSchema.parse(mndata);
             const mnuser = await mnservice.createUser(mndata);
-            res.status(HttpStatus.CREATED).json(mnuser);
+            res.status(HttpStatus.CREATED).json({
+                message: 'Utilisateur créé avec succès',
+                user: mnuser
+            });
         } catch (error: any) {
             const errors = error.errors ?? [{ message: error.message }];
             res.status(HttpStatus.BAD_REQUEST).json({ errors });
@@ -77,6 +86,18 @@ export class UserController {
             const id: number = Number(req.params.id);
             await mnservice.deleteUser(id);
             res.status(HttpStatus.NO_CONTENT).send();
+        } catch (error: any) {
+            res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
+        }
+    }
+
+    static async getSharedTodos(req: Request, res: Response) {
+        try {
+            const userId = Number(req.params.id);
+            // Utilise la méthode getSharedTodos du UserRepository via une instance
+            const userRepo = new UserRepository();
+            const todos = await userRepo.getSharedTodos(userId);
+            res.json(todos);
         } catch (error: any) {
             res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
         }

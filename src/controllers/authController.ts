@@ -12,7 +12,12 @@ export class AuthController {
 				secure:process.env.NODE_ENV === 'production',
 				sameSite: 'strict',
 				maxAge: 7 * 24 * 60 * 60 * 1000 });
-			res.status(HttpStatus.OK).json(tokens.accessToken);
+			// Retourne accessToken, userId et role
+			res.status(HttpStatus.OK).json({
+				accessToken: tokens.accessToken,
+				userId: tokens.userId,
+				role: tokens.role
+			});
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
 			res.status(HttpStatus.UNAUTHORIZED).json({ error: ErrorMessages.AUTH_INVALID_CREDENTIALS });

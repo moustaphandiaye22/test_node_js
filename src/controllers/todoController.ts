@@ -81,10 +81,12 @@ export class todoController {
         }
     }
     
-    static async create(req: Request, res: Response) {
+    static async create(req: AuthenticatedRequest, res: Response) {
         try {
             const mndata = CreateTodoSchema.parse(req.body);
-            const mntodo = await mnservice.createTodo(mndata);
+            // Injecte le userId du token dans la création
+            const todoData = { ...mndata, userId: req.user?.id };
+            const mntodo = await mnservice.createTodo(todoData);
             await historiqueService.create({
                 userId: mntodo.userId,
                 action: "CREATE",
@@ -98,11 +100,13 @@ export class todoController {
         }
     }
 
-    static async update(req: Request, res: Response) {
+    static async update(req: AuthenticatedRequest, res: Response) {
         try {
             const id: number = Number(req.params.id);
             const mndata = CreateTodoSchema.parse(req.body);
-            const mntodo = await mnservice.updateTodo(id, mndata);
+            // Injecte le userId du token dans la modification
+            const todoData = { ...mndata, userId: req.user?.id };
+            const mntodo = await mnservice.updateTodo(id, todoData);
             await historiqueService.create({
                 userId: mntodo.userId,
                 action: "UPDATE",
@@ -116,16 +120,16 @@ export class todoController {
         }
     }
 
-    static async delete(req: Request, res: Response) {
+    static async delete(req: AuthenticatedRequest, res: Response) {
         try {
             const id: number = Number(req.params.id);
-            await mnservice.deleteTodo(id);
             await historiqueService.create({
-                userId: id,
+                userId: typeof req.user?.id === 'number' ? req.user.id : -1,
                 action: "DELETE",
                 todoId: id,
                 timestamp: new Date()
             });
+            await mnservice.deleteTodo(id);
             res.status(HttpStatus.NO_CONTENT).send();
         } catch (error: any) {
             res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });

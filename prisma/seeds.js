@@ -4,6 +4,11 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
+  // Nettoyage des tables dépendantes (ordre: Historique, TodoShare, todo, user)
+  await prisma.historique.deleteMany();
+  await prisma.todoShare.deleteMany();
+  await prisma.todo.deleteMany();
+  // On ne supprime pas les users pour garder les upsert
   // Hashage des mots de passe
   const users = [
     {
@@ -41,49 +46,53 @@ async function main() {
     });
   }
 
-  await prisma.todo.createMany({
-    data: [
-      {
-        title: 'Learn TypeScript',
-        completed: false,
-        userId: 1,
-      },
-      {
-        title: 'Build a Node.js API',
-        completed: false,
-        userId: 2,
-      },
-      {
-        title: 'Write documentation',
-        completed: true,
-        userId: 3,
-      },
-    ],
+  // Création des todos un par un pour récupérer les IDs
+  const todo1 = await prisma.todo.create({
+    data: {
+      title: 'Learn TypeScript',
+      completed: false,
+      userId: 1,
+    },
   });
-  console.log('Seed data inserted');
-}
+  const todo2 = await prisma.todo.create({
+    data: {
+      title: 'Build a Node.js API',
+      completed: false,
+      userId: 2,
+    },
+  });
+  const todo3 = await prisma.todo.create({
+    data: {
+      title: 'Write documentation',
+      completed: true,
+      userId: 3,
+    },
+  });
+
   await prisma.historique.createMany({
     data: [
       {
         userId: 1,
         action: 'CREATE',
-        todoId: 1,
+        todoId: todo1.id,
         timestamp: new Date(),
       },
       {
         userId: 2,
         action: 'CREATE',
-        todoId: 2,
+        todoId: todo2.id,
         timestamp: new Date(),
       },
       {
         userId: 3,
         action: 'CREATE',
-        todoId: 3,
+        todoId: todo3.id,
         timestamp: new Date(),
       },
     ],
   });
+  console.log('Seed data inserted');
+}
 
 main()
   .catch((e) => {

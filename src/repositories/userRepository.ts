@@ -1,11 +1,10 @@
 import { PrismaClient } from "@prisma/client";
-import type { user } from "@prisma/client";
-import type { InterfaceRepository } from "./InterfacRepository.js";
+import bcrypt from 'bcryptjs';
 import { mnprisma } from '../config/db.js';
+import type { InterfaceRepository } from "./InterfacRepository.js";
 
-export class UserRepository implements InterfaceRepository<user>{
-
-    async findAll(): Promise<user[]> {
+export class UserRepository implements InterfaceRepository<any> {
+    async findAll() {
         return mnprisma.user.findMany({
             include: {
                 todos: true,
@@ -13,7 +12,7 @@ export class UserRepository implements InterfaceRepository<user>{
         });
     }
 
-    async findById(id: number): Promise<user | null> {
+    async findById(id: number) {
         return mnprisma.user.findUnique({
             where: { id },
             include: {
@@ -22,16 +21,33 @@ export class UserRepository implements InterfaceRepository<user>{
         });
     }
 
-    async create(data: Omit<user, "id">): Promise<user> {
-        return mnprisma.user.create({ data });
-        
+    async create(data: any) {
+        // Hash le mot de passe avant création
+        const hashedPassword = await bcrypt.hash(data.password, 10);
+        const userData = { ...data, password: hashedPassword };
+        return mnprisma.user.create({ data: userData });
     }
 
-    async update(id: number,data: Partial<Omit<user, "id" >> ): Promise<user> {
+    async update(id: number, data: any) {
         return mnprisma.user.update({ where: { id }, data });
     }
 
- async delete(id: number): Promise<void> {
+    async delete(id: number) {
         await mnprisma.user.delete({ where: { id } });
+    }
+
+    async getSharedTodos(userId: number) {
+        // Récupère tous les todos partagés avec cet utilisateur
+        return mnprisma.todo.findMany({
+            where: {
+                shares: {
+                    some: { userId }
+                }
+            },
+            include: {
+                user: true,
+                shares: true
+            }
+        });
     }
 }
