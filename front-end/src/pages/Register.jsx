@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
+import { Message } from '../utils/Message';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -16,15 +17,15 @@ const Register = () => {
     e.preventDefault();
     setError('');
     if (!name || name.length < 2) {
-      setError('Le nom doit contenir au moins 2 caractères.');
+      setError(Message.NOM_MIN_CARACTERE);
       return;
     }
     if (!email || !email.includes('@')) {
-      setError("L'email est obligatoire et doit être valide.");
+      setError(Message.INVALID_EMAIL);
       return;
     }
     if (!password || password.length < 2) {
-      setError('Le mot de passe doit contenir au moins 2 caractères.');
+      setError(Message.PASSWORD_MIN_CARACTERE);
       return;
     }
     try {
@@ -54,10 +55,10 @@ const Register = () => {
       } else if (err.error) {
         msg = err.error;
       } else {
-        msg = err.message || "Erreur d'inscription";
+        msg = err.message || Message.ERREURCONNECTION
       }
       if (msg.includes('Unique constraint failed') || msg.includes('email') || msg.includes('user_email_key')) {
-        msg = "Cet email est déjà utilisé. Veuillez vous connecter ou choisir un autre email.";
+        msg = Message.MAIL_EXISTTE;
       }
       setError(msg);
     }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
+import { Message } from '../utils/Message';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -13,11 +14,11 @@ const Login = () => {
     e.preventDefault();
     setError('');
     if (!email || !email.includes('@')) {
-      setError("L'email est obligatoire et doit être valide.");
+      setError(Message.EMAILINCORECT);
       return;
     }
     if (!password || password.length < 2) {
-      setError('Le mot de passe doit contenir au moins 2 caractères.');
+      setError(Message.PASSWORDINCORECT);
       return;
     }
     try {
@@ -44,7 +45,7 @@ const Login = () => {
       }
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Erreur de connexion');
+      setError(err.message || Message.ERREURCONNECTION);
     }
   };
 

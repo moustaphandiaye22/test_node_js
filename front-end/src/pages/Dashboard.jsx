@@ -7,11 +7,18 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [todos, setTodos] = useState([]);
   const [users, setUsers] = useState([]);
+  const [sharedTodos, setSharedTodos] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     apiRequest('/api/user/me')
-      .then(setUser)
+      .then(userData => {
+        setUser(userData);
+        // Récupère les todos partagés reçus
+        apiRequest(`/api/user/${userData.id}/shared-todos`)
+          .then(setSharedTodos)
+          .catch(() => {});
+      })
       .catch(() => {
         setError('Session expirée, veuillez vous reconnecter.');
         localStorage.removeItem('token');
@@ -31,12 +38,15 @@ const Dashboard = () => {
   // Statistiques dynamiques
   const totalTodos = todos.length;
   const totalUsers = users.length;
-  const sharedTodos = todos.filter(t => Array.isArray(t.sharedWith) && t.sharedWith.length > 0).length;
+  // Todos que j'ai partagés (envoyés)
+  const sharedByMeCount = todos.filter(t => Array.isArray(t.shares) && t.shares.length > 0 && t.userId === user?.id).length;
+  // Todos qu'on m'a partagés (reçus)
+  const sharedTodosCount = sharedTodos.length;
 
   return (
     <div className="p-8">
       <h2 className="text-2xl font-bold mb-6">Tableau de bord</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-8">
         <div className="bg-blue-50 rounded-lg shadow p-6 flex flex-col items-center">
           <span className="text-3xl font-bold text-blue-700">{totalTodos}</span>
           <span className="mt-2 text-blue-600 font-semibold">Todos totaux</span>
@@ -46,8 +56,12 @@ const Dashboard = () => {
           <span className="mt-2 text-green-600 font-semibold">Utilisateurs</span>
         </div>
         <div className="bg-yellow-50 rounded-lg shadow p-6 flex flex-col items-center">
-          <span className="text-3xl font-bold text-yellow-700">{sharedTodos}</span>
-          <span className="mt-2 text-yellow-600 font-semibold">Todos partagés</span>
+          <span className="text-3xl font-bold text-yellow-700">{sharedByMeCount}</span>
+          <span className="mt-2 text-yellow-600 font-semibold">Todos partagés (envoyés)</span>
+        </div>
+        <div className="bg-orange-50 rounded-lg shadow p-6 flex flex-col items-center">
+          <span className="text-3xl font-bold text-orange-700">{sharedTodosCount}</span>
+          <span className="mt-2 text-orange-600 font-semibold">Todos reçus (partagés)</span>
         </div>
       </div>
     </div>

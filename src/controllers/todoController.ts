@@ -13,6 +13,45 @@ const mnservice = new TodoService();
 const historiqueService = new HistoriqueService();
 
 export class todoController {
+    static async archive(req: AuthenticatedRequest, res: Response) {
+        try {
+            const id: number = Number(req.params.id);
+            const todo = await mnservice.findTodoById(id);
+            if (!todo) {
+                return res.status(HttpStatus.NOT_FOUND).json({ error: ErrorMessages.TODO_NOT_FOUND });
+            }
+            const updated = await mnservice.updateTodo(id, { archived: true });
+            await historiqueService.create({
+                userId: typeof req.user?.id === 'number' ? req.user.id : -1,
+                action: "ARCHIVE",
+                todoId: id,
+                timestamp: new Date()
+            });
+            res.json(updated);
+        } catch (error: any) {
+            res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
+        }
+    }
+
+    static async unarchive(req: AuthenticatedRequest, res: Response) {
+        try {
+            const id: number = Number(req.params.id);
+            const todo = await mnservice.findTodoById(id);
+            if (!todo) {
+                return res.status(HttpStatus.NOT_FOUND).json({ error: ErrorMessages.TODO_NOT_FOUND });
+            }
+            const updated = await mnservice.updateTodo(id, { archived: false });
+            await historiqueService.create({
+                userId: typeof req.user?.id === 'number' ? req.user.id : -1,
+                action: "UNARCHIVE",
+                todoId: id,
+                timestamp: new Date()
+            });
+            res.json(updated);
+        } catch (error: any) {
+            res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
+        }
+    }
     static async share(req: AuthenticatedRequest, res: Response) {
         try {
             const todoId: number = Number(req.params.id);

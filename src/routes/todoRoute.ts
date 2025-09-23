@@ -14,6 +14,8 @@ mnrouter.post("/", requireAuth, todoController.create);
 mnrouter.put("/:id", requireAuth, todoAccess, todoController.update);
 mnrouter.delete("/:id", requireAuth, todoAccess, todoController.delete);
 mnrouter.patch("/:id/complete", requireAuth, todoAccess, todoController.complete);
+mnrouter.patch("/:id/archive", requireAuth, todoAccess, todoController.archive);
+mnrouter.patch("/:id/unarchive", requireAuth, todoAccess, todoController.unarchive);
 mnrouter.post("/:id/share", requireAuth, todoAccess, todoController.share);
 
 export default mnrouter;
