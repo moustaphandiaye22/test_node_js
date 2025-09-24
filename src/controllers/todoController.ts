@@ -98,10 +98,15 @@ export class todoController {
             res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
         }
     }
-    static async getAll(_req: Request, res: Response) {
+    static async getAll(req: Request, res: Response) {
         try {
-            const mnusers = await mnservice.getAllTodos();
-            res.json(mnusers);
+            const todos = await mnservice.getAllTodos();
+            const host = req.protocol + '://' + req.get('host');
+            const todosWithImageUrl = todos.map(todo => ({
+                ...todo,
+                imageUrl: todo.imageUrl ? (todo.imageUrl.startsWith('http') ? todo.imageUrl : host + todo.imageUrl) : null
+            }));
+            res.json(todosWithImageUrl);
         } catch (error: any) {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.SERVER_ERROR });
         }
@@ -122,9 +127,18 @@ export class todoController {
     
     static async create(req: AuthenticatedRequest, res: Response) {
         try {
-            const mndata = CreateTodoSchema.parse(req.body);
+            // Parse les champs string venant de multipart/form-data
+            const parsedBody = {
+                ...req.body,
+                completed: req.body.completed === 'true' || req.body.completed === true,
+            };
+            const mndata = CreateTodoSchema.parse(parsedBody);
             // Injecte le userId du token dans la création
-            const todoData = { ...mndata, userId: req.user?.id };
+            let imageUrl = undefined;
+            if (req.file) {
+                imageUrl = `/assets/${req.file.filename}`;
+            }
+            const todoData = { ...mndata, userId: req.user?.id, imageUrl };
             const mntodo = await mnservice.createTodo(todoData);
             await historiqueService.create({
                 userId: mntodo.userId,
@@ -142,9 +156,19 @@ export class todoController {
     static async update(req: AuthenticatedRequest, res: Response) {
         try {
             const id: number = Number(req.params.id);
-            const mndata = CreateTodoSchema.parse(req.body);
+            // Parse les champs string venant de multipart/form-data
+            const parsedBody = {
+                ...req.body,
+                completed: req.body.completed === 'true' || req.body.completed === true,
+            };
+            const mndata = CreateTodoSchema.parse(parsedBody);
+            let imageUrl = undefined;
+            if (req.file) {
+                imageUrl = `/assets/${req.file.filename}`;
+            }
             // Injecte le userId du token dans la modification
-            const todoData = { ...mndata, userId: req.user?.id };
+            const todoData: any = { ...mndata, userId: req.user?.id };
+            if (imageUrl) todoData.imageUrl = imageUrl;
             const mntodo = await mnservice.updateTodo(id, todoData);
             await historiqueService.create({
                 userId: mntodo.userId,

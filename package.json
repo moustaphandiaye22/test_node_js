@@ -41,6 +41,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "postcss": "^8.5.6",
+    "react-hook-form": "^7.63.0",
     "react-router-dom": "^7.9.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",

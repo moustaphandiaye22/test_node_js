@@ -28,10 +28,13 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 const port = 3010;
 
-app.use(express.json());
+
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Les routes qui acceptent des fichiers (multer) doivent venir AVANT express.json()
 app.use('/api/todo', todoroute);
 app.use('/api/user', userroute);
+// Les autres routes peuvent utiliser express.json()
+app.use(express.json());
 app.use('/api/auth', authroute);
 app.use('/api/historique', historiqueRouter);
 

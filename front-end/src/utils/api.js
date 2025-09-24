@@ -12,13 +12,19 @@ export async function apiRequest(path, options = {}) {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
-  // Si body est FormData, ne pas mettre Content-Type
-  if (!(options.body instanceof FormData)) {
+  let body = options.body;
+  if (body instanceof FormData) {
+    // Ne pas définir Content-Type, laisser le navigateur gérer
+    // fetch utilisera automatiquement multipart/form-data avec boundary
+    // headers['Content-Type'] = undefined;
+  } else if (body) {
     headers['Content-Type'] = 'application/json';
+    body = JSON.stringify(body);
   }
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers,
+    body,
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw data;

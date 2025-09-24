@@ -17,10 +17,9 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 mnrouter.post('/:id/upload-image', upload.single('image'), UserController.uploadImage);
-
 mnrouter.get("/", UserController.getAll);
 mnrouter.get("/:id", UserController.findById);
-	mnrouter.post("/", upload.single("image"), UserController.create);
+mnrouter.post("/", upload.single("image"), UserController.create);
 mnrouter.put("/:id", UserController.update);
 mnrouter.delete("/:id", UserController.delete);
 mnrouter.get('/:id/shared-todos', UserController.getSharedTodos);

@@ -2,16 +2,20 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
 import { Message } from '../utils/Message';
+import { useForm } from 'react-hook-form';
+import FormInput from '../components/FormInput';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { handleSubmit, register } = useForm();
 
   // Ajout de la validation côté front
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async () => {
     setError('');
     if (!email || !email.includes('@')) {
       setError(Message.EMAILINCORECT);
@@ -21,11 +25,13 @@ const Login = () => {
       setError(Message.PASSWORDINCORECT);
       return;
     }
+    setLoading(true);
     try {
       // On suppose que l'API retourne { accessToken, userId } ou { token, userId }
       const result = await apiRequest('/api/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        headers: { 'Content-Type': 'application/json' },
+        body: { email, password },
       });
       // Compatibilité : si c'est juste un string, on ne peut pas stocker l'id
       if (typeof result === 'string') {
@@ -46,33 +52,47 @@ const Login = () => {
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || Message.ERREURCONNECTION);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h2 className="text-2xl font-bold mb-4">Connexion</h2>
-      <form className="flex flex-col gap-4 w-80" onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          className="border p-2 rounded"
-          autoComplete="username"
-        />
-        <input
-          type="password"
-          placeholder="Mot de passe"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          className="border p-2 rounded"
-          autoComplete="current-password"
-        />
-        {error && <div className="text-red-500">{error}</div>}
-        <button type="submit" className="bg-blue-600 text-white p-2 rounded">Se connecter</button>
-      </form>
-      <button className="mt-4 underline" onClick={() => navigate('/register')}>Créer un compte</button>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100">
+      <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md flex flex-col items-center">
+        <h2 className="text-3xl font-bold mb-6 text-blue-700">Connexion</h2>
+        <form className="flex flex-col gap-5 w-full" onSubmit={handleSubmit(onSubmit)}>
+          <FormInput
+            name="email"
+            type="text"
+            placeholder="Email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            register={register}
+            autoComplete="username"
+          />
+          <div className="relative w-full">
+            <FormInput
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Mot de passe"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              register={register}
+              autoComplete="current-password"
+            />
+            <button type="button" onClick={() => setShowPassword(v => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 text-sm focus:outline-none">
+              {showPassword ? 'Cacher' : 'Voir'}
+            </button>
+          </div>
+          {error && <div className="text-red-500 text-center font-semibold">{error}</div>}
+          <button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-bold shadow transition disabled:opacity-60 disabled:cursor-not-allowed">
+            {loading ? 'Connexion...' : 'Se connecter'}
+          </button>
+        </form>
+        <button className="mt-6 underline text-blue-600 hover:text-blue-800" onClick={() => navigate('/register')}>Créer un compte</button>
+      </div>
     </div>
   );
 };

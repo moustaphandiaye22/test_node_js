@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
+import { LogOut } from 'lucide-react';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -34,9 +35,7 @@ const Header = () => {
         </span>
       )}
       <button onClick={handleLogout} className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow transition">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-3A2.25 2.25 0 008.25 5.25V9m7.5 0v10.5A2.25 2.25 0 0113.5 21h-3a2.25 2.25 0 01-2.25-2.25V9m7.5 0H18a2.25 2.25 0 012.25 2.25v7.5A2.25 2.25 0 0118 21h-1.5m-7.5 0H6a2.25 2.25 0 01-2.25-2.25v-7.5A2.25 2.25 0 016 9h1.5" />
-        </svg>
+        <LogOut className="w-5 h-5" />
         Déconnexion
       </button>
     </header>

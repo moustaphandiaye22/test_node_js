@@ -23,6 +23,8 @@ export const ErrorMessages = {
     TODO_CREATED: "Todo créé avec succès",
     TODO_UPDATED: "Todo mis à jour",
     TODO_DELETED: "Todo supprimé",
+    TODO_DESCRIPTION_TOO_LONG: "La description est trop longue (max 200 caractères)",
+
 
     // Historique
     HISTO_MISSING_FIELDS: "Champs requis manquants",
