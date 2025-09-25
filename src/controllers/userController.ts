@@ -60,7 +60,7 @@ export class UserController {
             mndata = CreateUserSchema.parse(mndata);
             const mnuser = await mnservice.createUser(mndata);
             res.status(HttpStatus.CREATED).json({
-                message: 'Utilisateur créé avec succès',
+                message: ErrorMessages.USER_CREATED,
                 user: mnuser
             });
         } catch (error: any) {

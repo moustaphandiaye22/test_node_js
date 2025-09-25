@@ -9,9 +9,9 @@ export const CreateTodoSchema = z.object({
         message: ErrorMessages.TODO_MISSING_COMPLETED
     }),
     startDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
-        message: 'La date de début est invalide'
+        message: ErrorMessages.INVALID_DATE_DEBUT
     }),
     endDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
-        message: 'La date de fin est invalide'
+        message: ErrorMessages.INVALID_DATE_FIN
     })
 });

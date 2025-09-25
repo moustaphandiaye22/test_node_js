@@ -15,7 +15,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       {!hideHeader && <Header />}
-      <div className="max-w-full mx-auto ml-11 mr-11">
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-8">
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

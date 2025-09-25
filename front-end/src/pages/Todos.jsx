@@ -7,6 +7,8 @@ import { History, Pencil, Trash2 } from 'lucide-react';
 import TodoTabs from '../components/TodoTabs';
 import TodoCard from '../components/TodoCard';
 import TodoAddForm from '../components/TodoAddForm';
+import EditTodoForm from '../components/EditTodoForm';
+import ShareTodoForm from '../components/ShareTodoForm';
 import { Message } from '../utils/Message';
 import TodoHistory from '../components/TodoHistory';
 import TodoFilters from '../components/TodoFilters';
@@ -147,7 +149,7 @@ const Todos = () => {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     if (!editTodo.startDate || !editTodo.endDate) {
-      setError('Veuillez renseigner la date de début et de fin.');
+      setError(Message.ADD_DATE);
       return;
     }
     try {
@@ -201,7 +203,8 @@ const Todos = () => {
     try {
       await apiRequest(`/api/todo/${todoId}/share`, {
         method: 'POST',
-        body: JSON.stringify({ userId: userIdToShare, canEdit: shareCanEdit, canDelete: shareCanDelete }),
+        headers: { 'Content-Type': 'application/json' },
+        body: { userId: userIdToShare, canEdit: shareCanEdit, canDelete: shareCanDelete },
       });
       setShareMsg('Todo partagé !');
       setTimeout(() => setShareMsg(''), 2000);
@@ -224,8 +227,8 @@ const Todos = () => {
   };
 
   return (
-  <div className="w-90% m-0 p-0 flex flex-col items-center justify-center " style={{ overflow: 'hidden', width: 'calc(100vw - 1rem)'}}>
-    <div className="mb-10 w-full max-w-7xl flex flex-col items-center justify-center gap-6">
+  <div className="w-full m-0 p-0 flex flex-col items-center justify-center overflow-x-hidden">
+    <div className="mb-10 w-full max-w-7xl flex flex-col items-center justify-center gap-6 px-2 sm:px-4 md:px-8">
         {/* Filtres de recherche */}
         <TodoFilters
           search={search}
@@ -244,61 +247,48 @@ const Todos = () => {
 
       {(activeTab === 'all' || activeTab === 'user') && (
         <>
-          <div className="mb-10 w-1/2 justify-center items-center mx-auto">
+          <div className="mb-10 w-full sm:w-3/4 md:w-2/3 lg:w-1/2 justify-center items-center mx-auto px-2">
             <TodoAddForm newTodo={newTodo} onChange={setNewTodo} onSubmit={handleAdd} />
           </div>
 
           {error && <div className="text-red-500 text-center mb-6 font-semibold text-lg">{error}</div>}
 
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8" style={{ width: '90vw',  margin: 0, padding: 0, boxSizing: 'border-box', overflowX: 'hidden', justifyContent: 'flex-start' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full" style={{ margin: 0, padding: 0, boxSizing: 'border-box', justifyContent: 'flex-start' }}>
               {currentTodos.map(todo => {
                 const isMine = todo.userId === userId;
-                // Formulaire d'édition (inline)
+                // Formulaire d'édition via composant dédié
                 const editForm = (
                   editTodoId === todo.id && (
-                    <form className="mt-6 border-t pt-6" onSubmit={handleEditSubmit}>
-                      <h4 className="text-base font-semibold mb-3 text-purple-700">Modifier</h4>
-                      <input type="text" value={editTodo.title} onChange={e => setEditTodo({ ...editTodo, title: e.target.value })} className="w-full border p-3 rounded-xl mb-3 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-lg" required />
-                      <textarea value={editTodo.description} onChange={e => setEditTodo({ ...editTodo, description: e.target.value })} className="w-full border p-3 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-lg" placeholder="Description (optionnelle)" />
-                      <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                        <div className="flex-1">
-                          <label className="block text-gray-700 font-semibold mb-2">Date et heure de début</label>
-                          <input type="datetime-local" value={editTodo.startDate} onChange={e => setEditTodo({ ...editTodo, startDate: e.target.value })} className="w-full border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-300 text-lg" />
-                        </div>
-                        <div className="flex-1">
-                          <label className="block text-gray-700 font-semibold mb-2">Date et heure de fin</label>
-                          <input type="datetime-local" value={editTodo.endDate} onChange={e => setEditTodo({ ...editTodo, endDate: e.target.value })} className="w-full border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-300 text-lg" />
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <button type="submit" className="flex-1 bg-yellow-500 text-white p-3 rounded-xl shadow hover:bg-yellow-600 transition text-lg font-bold">Enregistrer</button>
-                        <button type="button" onClick={() => setEditTodoId(null)} className="flex-1 bg-gray-300 text-gray-700 p-3 rounded-xl hover:bg-gray-400 transition text-lg font-bold">Annuler</button>
-                      </div>
-                    </form>
+                    <EditTodoForm
+                      editTodo={editTodo}
+                      setEditTodo={setEditTodo}
+                      onSubmit={handleEditSubmit}
+                      onCancel={() => setEditTodoId(null)}
+                    />
                   )
                 );
-                // Formulaire de partage (inline)
+                // Formulaire de partage via composant dédié
                 const shareForm = (
                   shareTodoId === todo.id && (
-                    <div className="mt-6 border-t pt-6 flex flex-col items-center w-full">
-                      <h4 className="text-base font-semibold mb-3 text-orange-700">Partager avec un utilisateur</h4>
-                      <div className="flex flex-col sm:flex-row gap-3 w-full min-w-0">
-                        <input type="text" placeholder="Email de l'utilisateur" value={shareId} onChange={e => setShareId(e.target.value)} className="flex-1 min-w-0 border p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300 text-lg" />
-                        <button onClick={() => { const userToShare = users.find(u => u.email === shareId); if (!userToShare) { setShareMsg('Utilisateur non trouvé'); return; } handleShare(todo.id, userToShare.id); }} className="bg-orange-600 text-white p-3 rounded-xl shadow hover:bg-orange-700 transition text-lg font-bold min-w-0">Partager</button>
-                      </div>
-                      <div className="flex gap-4 mt-4 items-center">
-                        <label className="flex items-center gap-2">
-                          <input type="checkbox" checked={shareCanEdit} onChange={e => setShareCanEdit(e.target.checked)} />
-                          <span>Peut éditer</span>
-                        </label>
-                        <label className="flex items-center gap-2">
-                          <input type="checkbox" checked={shareCanDelete} onChange={e => setShareCanDelete(e.target.checked)} />
-                          <span>Peut supprimer</span>
-                        </label>
-                      </div>
-                      {shareMsg && <span className={`mt-3 text-base font-semibold ${shareMsg.includes('Erreur') ? 'text-red-500' : 'text-green-600'}`}>{shareMsg}</span>}
-                    </div>
+                    <ShareTodoForm
+                      users={users}
+                      shareId={shareId}
+                      setShareId={setShareId}
+                      shareCanEdit={shareCanEdit}
+                      setShareCanEdit={setShareCanEdit}
+                      shareCanDelete={shareCanDelete}
+                      setShareCanDelete={setShareCanDelete}
+                      shareMsg={shareMsg}
+                      onShare={() => {
+                        const userToShare = users.find(u => u.email === shareId);
+                        if (!userToShare) {
+                          setShareMsg('Utilisateur non trouvé');
+                          return;
+                        }
+                        handleShare(todo.id, userToShare.id);
+                      }}
+                    />
                   )
                 );
                 return (
@@ -333,12 +323,12 @@ const Todos = () => {
       )}
 
       {activeTab === 'shared' && (
-        <div className="mb-10 w-1/2 justify-center items-center mx-auto">
+  <div className="mb-10 w-full sm:w-3/4 md:w-2/3 lg:w-1/2 justify-center items-center mx-auto px-2">
           <h2 className="text-3xl font-bold text-orange-700 mb-6">Todos partagés avec moi</h2>
           {sharedTodos.length === 0 ? (
             <div className="text-gray-500 text-center">Aucun todo partagé avec vous.</div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8" style={{ width: '90vw', margin: 0, padding: 0, boxSizing: 'border-box', overflowX: 'hidden', justifyContent: 'flex-start' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 w-full" style={{ margin: 0, padding: 0, boxSizing: 'border-box', justifyContent: 'flex-start' }}>
               {sharedTodos.map(todo => {
                 // Cherche le partage correspondant à l'utilisateur courant
                 const myShare = Array.isArray(todo.shares) ? todo.shares.find(s => s.userId === userId) : null;

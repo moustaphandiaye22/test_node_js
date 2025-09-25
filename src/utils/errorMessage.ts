@@ -13,6 +13,7 @@ export const ErrorMessages = {
     USER_NOT_FOUND: "Utilisateur non trouvé",
     USER_IMAGE_REQUIRED: "Aucune image envoyée",
     USER_IMAGE_UPLOADED: "Image uploadée",
+    USER_CREATED: "Utilisateur créé avec succès",
 
     // Todo
     TODO_MISSING_TITLE: "Le titre du todo est obligatoire",
@@ -24,6 +25,8 @@ export const ErrorMessages = {
     TODO_UPDATED: "Todo mis à jour",
     TODO_DELETED: "Todo supprimé",
     TODO_DESCRIPTION_TOO_LONG: "La description est trop longue (max 200 caractères)",
+    INVALID_DATE_DEBUT : "La date de début est invalide",
+    INVALID_DATE_FIN : "La date de fin est invalide",
 
 
     // Historique

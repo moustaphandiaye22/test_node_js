@@ -25,5 +25,6 @@
     ERROR_DESARCHIVE :"Erreur lors du désarchivage",
     ERROR_PAGE : "Erreur lors du partage",
     ERROR_COMPLETED:"Erreur lors du marquage comme complet",
+    ADD_DATE : 'Veuillez renseigner la date de début et de fin.'
 
 }

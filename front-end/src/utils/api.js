@@ -16,7 +16,7 @@ export async function apiRequest(path, options = {}) {
     // Ne pas définir Content-Type, laisser le navigateur gérer
     // fetch utilisera automatiquement multipart/form-data avec boundary
     // headers['Content-Type'] = undefined;
-  } else if (body) {
+  } else if (body && typeof body !== 'string') {
     headers['Content-Type'] = 'application/json';
     body = JSON.stringify(body);
   }

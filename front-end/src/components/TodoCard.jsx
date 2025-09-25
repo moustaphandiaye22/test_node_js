@@ -16,7 +16,7 @@ const TodoCard = ({
   shareForm
 }) => (
   <div
-    className={`rounded-3xl shadow-xl border border-gray-100 p-6 flex flex-col gap-1 bg-white transition-all duration-300 hover:shadow-2xl hover:scale-[1.03]  mx-auto min-h-[40px] ${isMine ? 'ring-2 ring-green-400' : ''}`}
+    className={`rounded-3xl shadow-xl border border-gray-100 p-6 flex flex-col gap-1 bg-white transition-all duration-300 hover:shadow-2xl hover:scale-[1.03] mx-auto min-h-[40px] relative overflow-auto z-10 ${isMine ? 'ring-2 ring-green-400' : ''}`}
   >
     {todo.imageUrl && (
       <div className="flex justify-center items-center mb-2">
