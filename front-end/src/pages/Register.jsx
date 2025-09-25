@@ -13,7 +13,6 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [name, setName] = useState('');
-  const [role, setRole] = useState('USER');
   const [image, setImage] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,7 +35,7 @@ const Register = () => {
       return;
     }
     if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas.");
+      setError(Message.MOT_de_passe_different);
       return;
     }
     setLoading(true);
@@ -45,7 +44,7 @@ const Register = () => {
       formData.append('email', email);
       formData.append('password', password);
       formData.append('name', name);
-      formData.append('role', role);
+      formData.append('role', 'user'); 
       if (image) formData.append('image', image);
       await apiRequest('/api/user', {
         method: 'POST',
@@ -140,17 +139,6 @@ const Register = () => {
               {showConfirmPassword ? 'Cacher' : 'Voir'}
             </button>
           </div>
-          <FormSelect
-            name="role"
-            label={null}
-            register={rhfRegister}
-            value={role}
-            onChange={e => setRole(e.target.value)}
-            options={[
-              { value: 'USER', label: 'Utilisateur' },
-              { value: 'ADMIN', label: 'Administrateur' },
-            ]}
-          />
           {error && <div className="text-red-500 text-center font-semibold">{error}</div>}
           <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl font-bold shadow transition disabled:opacity-60 disabled:cursor-not-allowed">
             {loading ? "Inscription..." : "S'inscrire"}

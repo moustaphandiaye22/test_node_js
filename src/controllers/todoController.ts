@@ -8,8 +8,12 @@ interface AuthenticatedRequest extends Request {
     };
 }
 import { TodoService } from "../services/todoService.js";
+import { NotificationService } from "../services/notificationService.js";
+import { UserRepository } from "../repositories/userRepository.js";
 import { CreateTodoSchema } from "../validators/todoSchema.js"; 
 const mnservice = new TodoService();
+const notificationService = new NotificationService();
+const userRepository = new UserRepository();
 const historiqueService = new HistoriqueService();
 
 export class todoController {
@@ -93,6 +97,16 @@ export class todoController {
                 todoId: id,
                 timestamp: new Date()
             });
+            // Récupère le todo avec les partages
+            const todoWithShares = await mnservice.findTodoById(id);
+            if (todoWithShares) {
+                const todoWS: any = todoWithShares;
+                const users = [todoWS.userId];
+                const sharedUsers = todoWS.shares ? todoWS.shares.map((s: any) => s.userId) : [];
+                const allUsers = Array.from(new Set([...users, ...sharedUsers]));
+                const userObjs = await Promise.all(allUsers.map(uid => userRepository.findById(uid)));
+                await notificationService.notifyTaskCompleted(todo, userObjs);
+            }
             res.json(todo);
         } catch (error: any) {
             res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
@@ -102,11 +116,12 @@ export class todoController {
         try {
             const todos = await mnservice.getAllTodos();
             const host = req.protocol + '://' + req.get('host');
-            const todosWithImageUrl = todos.map(todo => ({
+            const todosWithUrls = todos.map(todo => ({
                 ...todo,
-                imageUrl: todo.imageUrl ? (todo.imageUrl.startsWith('http') ? todo.imageUrl : host + todo.imageUrl) : null
+                imageUrl: todo.imageUrl ? (todo.imageUrl.startsWith('http') ? todo.imageUrl : host + todo.imageUrl) : null,
+                audioUrl: todo.audioUrl ? (todo.audioUrl.startsWith('http') ? todo.audioUrl : host + todo.audioUrl) : null
             }));
-            res.json(todosWithImageUrl);
+            res.json(todosWithUrls);
         } catch (error: any) {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.SERVER_ERROR });
         }
@@ -133,12 +148,23 @@ export class todoController {
                 completed: req.body.completed === 'true' || req.body.completed === true,
             };
             const mndata = CreateTodoSchema.parse(parsedBody);
-            // Injecte le userId du token dans la création
+            // Gestion des fichiers
             let imageUrl = undefined;
-            if (req.file) {
-                imageUrl = `/assets/${req.file.filename}`;
-            }
-            const todoData = { ...mndata, userId: req.user?.id, imageUrl };
+            let audioUrl = undefined;
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            const imageFile = files?.image?.[0];
+            const audioFile = files?.audio?.[0];
+            if (imageFile) imageUrl = `/assets/${imageFile.filename}`;
+            if (audioFile) audioUrl = `/audio/${audioFile.filename}`;
+
+            const todoData = {
+                ...mndata,
+                userId: req.user?.id,
+                imageUrl,
+                audioUrl,
+                startDate: new Date(mndata.startDate),
+                endDate: new Date(mndata.endDate)
+            };
             const mntodo = await mnservice.createTodo(todoData);
             await historiqueService.create({
                 userId: mntodo.userId,
@@ -162,13 +188,23 @@ export class todoController {
                 completed: req.body.completed === 'true' || req.body.completed === true,
             };
             const mndata = CreateTodoSchema.parse(parsedBody);
+            // Gestion des fichiers
             let imageUrl = undefined;
-            if (req.file) {
-                imageUrl = `/assets/${req.file.filename}`;
-            }
+            let audioUrl = undefined;
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            const imageFile = files?.image?.[0];
+            const audioFile = files?.audio?.[0];
+            if (imageFile) imageUrl = `/assets/${imageFile.filename}`;
+            if (audioFile) audioUrl = `/audio/${audioFile.filename}`;
             // Injecte le userId du token dans la modification
-            const todoData: any = { ...mndata, userId: req.user?.id };
+            const todoData: any = {
+                ...mndata,
+                userId: req.user?.id,
+                startDate: new Date(mndata.startDate),
+                endDate: new Date(mndata.endDate)
+            };
             if (imageUrl) todoData.imageUrl = imageUrl;
+            if (audioUrl) todoData.audioUrl = audioUrl;
             const mntodo = await mnservice.updateTodo(id, todoData);
             await historiqueService.create({
                 userId: mntodo.userId,
@@ -176,6 +212,18 @@ export class todoController {
                 todoId: mntodo.id,
                 timestamp: new Date()
             });
+            // Notification si la tâche repasse en cours
+            if (mntodo.completed === false) {
+                const todoWithShares = await mnservice.findTodoById(id);
+                if (todoWithShares) {
+                    const todoWS: any = todoWithShares;
+                    const users = [todoWS.userId];
+                    const sharedUsers = todoWS.shares ? todoWS.shares.map((s: any) => s.userId) : [];
+                    const allUsers = Array.from(new Set([...users, ...sharedUsers]));
+                    const userObjs = await Promise.all(allUsers.map(uid => userRepository.findById(uid)));
+                    await notificationService.notifyTaskResumed(mntodo, userObjs);
+                }
+            }
             res.json(mntodo);
         } catch (error: any) {
             const errors = error.errors ?? [{ message: error.message }];

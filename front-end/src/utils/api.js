@@ -4,7 +4,6 @@ const API_URL = 'http://localhost:3010';
 export async function apiRequest(path, options = {}) {
   const token = localStorage.getItem('token');
   const userId = localStorage.getItem('userId');
-  // Remplace /me par /:id si présent dans le path
   if (path === '/api/user/me' && userId) {
     path = `/api/user/${userId}`;
   }

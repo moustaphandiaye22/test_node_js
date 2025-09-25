@@ -32,7 +32,7 @@ const Todos = () => {
   const [shareCanEdit, setShareCanEdit] = useState(true);
   const [shareCanDelete, setShareCanDelete] = useState(false);
   const [editTodoId, setEditTodoId] = useState(null);
-  const [editTodo, setEditTodo] = useState({ title: '', description: '' });
+  const [editTodo, setEditTodo] = useState({ title: '', description: '', startDate: '', endDate: '' });
   const [fetchId, setFetchId] = useState('');
   // Prépare la liste filtrée pour la pagination (all/user)
   let filteredTodos = (activeTab === 'all' ? todos : todos.filter(todo => todo.userId === userId));
@@ -103,22 +103,31 @@ const Todos = () => {
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!newTodo.title.trim()) return;
+    if (!newTodo.startDate || !newTodo.endDate) {
+      setError('Veuillez renseigner la date de début et de fin.');
+      return;
+    }
     try {
       const formData = new FormData();
       formData.append('title', newTodo.title);
       if (newTodo.description && newTodo.description.trim() !== '') {
         formData.append('description', newTodo.description);
       }
+      formData.append('startDate', newTodo.startDate);
+      formData.append('endDate', newTodo.endDate);
       formData.append('completed', 'false');
       if (newTodo.image) {
         formData.append('image', newTodo.image);
+      }
+      if (newTodo.audio) {
+        formData.append('audio', newTodo.audio, 'audio.webm');
       }
       await apiRequest('/api/todo', {
         method: 'POST',
         body: formData,
         isFormData: true,
       });
-      setNewTodo({ title: '', description: '', image: undefined });
+      setNewTodo({ title: '', description: '', image: undefined, audio: undefined, startDate: '', endDate: '' });
       fetchTodos();
     } catch (err) {
       setError(err?.errors?.[0]?.message || err?.error || Message.ERROR_AJOUT);
@@ -127,23 +136,34 @@ const Todos = () => {
 
   const handleEdit = (todo) => {
     setEditTodoId(todo.id);
-    setEditTodo({ title: todo.title, description: todo.description || '' });
+    setEditTodo({
+      title: todo.title,
+      description: todo.description || '',
+      startDate: todo.startDate ? new Date(todo.startDate).toISOString().slice(0, 16) : '',
+      endDate: todo.endDate ? new Date(todo.endDate).toISOString().slice(0, 16) : ''
+    });
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
+    if (!editTodo.startDate || !editTodo.endDate) {
+      setError('Veuillez renseigner la date de début et de fin.');
+      return;
+    }
     try {
       const todoToEdit = currentTodos.find(t => t.id === editTodoId);
       const formData = new FormData();
       formData.append('title', editTodo.title);
       formData.append('description', editTodo.description || '');
+      formData.append('startDate', editTodo.startDate);
+      formData.append('endDate', editTodo.endDate);
       formData.append('completed', 'false');
       await apiRequest(`/api/todo/${editTodoId}`, {
         method: 'PUT',
         body: formData,
       });
       setEditTodoId(null);
-      setEditTodo({ title: '', description: '' });
+      setEditTodo({ title: '', description: '' , startDate: '', endDate: '' });
       fetchTodos();
     } catch (err) {
       setError(err?.error || Message.ERROR_UPDATE);
@@ -205,8 +225,7 @@ const Todos = () => {
 
   return (
   <div className="w-90% m-0 p-0 flex flex-col items-center justify-center " style={{ overflow: 'hidden', width: 'calc(100vw - 1rem)'}}>
-          {/* L'affichage du user connecté est maintenant dans le Header */}
-  <div className="mb-10 w-full max-w-7xl flex flex-col items-center justify-center gap-6">
+    <div className="mb-10 w-full max-w-7xl flex flex-col items-center justify-center gap-6">
         {/* Filtres de recherche */}
         <TodoFilters
           search={search}
@@ -231,9 +250,8 @@ const Todos = () => {
 
           {error && <div className="text-red-500 text-center mb-6 font-semibold text-lg">{error}</div>}
 
-          {/* Pagination logic and grid (nouvelle version avec usePagination) */}
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8" style={{ width: '90vw',  margin: 0, padding: 0, boxSizing: 'border-box', overflowX: 'hidden', justifyContent: 'flex-start' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8" style={{ width: '90vw',  margin: 0, padding: 0, boxSizing: 'border-box', overflowX: 'hidden', justifyContent: 'flex-start' }}>
               {currentTodos.map(todo => {
                 const isMine = todo.userId === userId;
                 // Formulaire d'édition (inline)
@@ -243,6 +261,16 @@ const Todos = () => {
                       <h4 className="text-base font-semibold mb-3 text-purple-700">Modifier</h4>
                       <input type="text" value={editTodo.title} onChange={e => setEditTodo({ ...editTodo, title: e.target.value })} className="w-full border p-3 rounded-xl mb-3 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-lg" required />
                       <textarea value={editTodo.description} onChange={e => setEditTodo({ ...editTodo, description: e.target.value })} className="w-full border p-3 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-lg" placeholder="Description (optionnelle)" />
+                      <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                        <div className="flex-1">
+                          <label className="block text-gray-700 font-semibold mb-2">Date et heure de début</label>
+                          <input type="datetime-local" value={editTodo.startDate} onChange={e => setEditTodo({ ...editTodo, startDate: e.target.value })} className="w-full border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-300 text-lg" />
+                        </div>
+                        <div className="flex-1">
+                          <label className="block text-gray-700 font-semibold mb-2">Date et heure de fin</label>
+                          <input type="datetime-local" value={editTodo.endDate} onChange={e => setEditTodo({ ...editTodo, endDate: e.target.value })} className="w-full border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-300 text-lg" />
+                        </div>
+                      </div>
                       <div className="flex gap-3">
                         <button type="submit" className="flex-1 bg-yellow-500 text-white p-3 rounded-xl shadow hover:bg-yellow-600 transition text-lg font-bold">Enregistrer</button>
                         <button type="button" onClick={() => setEditTodoId(null)} className="flex-1 bg-gray-300 text-gray-700 p-3 rounded-xl hover:bg-gray-400 transition text-lg font-bold">Annuler</button>

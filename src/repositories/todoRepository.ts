@@ -26,7 +26,8 @@ export class TodoRepository implements InterfaceRepository<todo>{
                         name: true,
                         email: true,
                     }
-                }
+                },
+                shares: true
             }
         });
     }
@@ -36,7 +37,13 @@ export class TodoRepository implements InterfaceRepository<todo>{
     }
 
     async update(id: number,data: Partial<Omit<todo, "id" >> ): Promise<todo> {
-        return mnprisma.todo.update({ where: { id }, data });
+        return mnprisma.todo.update({
+            where: { id },
+            data,
+            include: {
+                shares: true
+            }
+        });
     }
 
  async delete(id: number): Promise<void> {

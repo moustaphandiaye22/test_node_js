@@ -12,8 +12,8 @@ const mnrouter = Router();
 
 mnrouter.get("/", requireAuth, todoAccess, todoController.getAll);
 mnrouter.get("/:id", requireAuth, todoAccess, todoController.findById);
-mnrouter.post("/", requireAuth, upload.single("image"), todoController.create);
-mnrouter.put("/:id", requireAuth, todoAccess, upload.single("image"), todoController.update);
+mnrouter.post("/", requireAuth, upload.fields([{ name: "image", maxCount: 1 }, { name: "audio", maxCount: 1 }]), todoController.create);
+mnrouter.put("/:id", requireAuth, todoAccess, upload.fields([{ name: "image", maxCount: 1 }, { name: "audio", maxCount: 1 }]), todoController.update);
 mnrouter.delete("/:id", requireAuth, todoAccess, todoController.delete);
 mnrouter.patch("/:id/complete", requireAuth, todoAccess, todoController.complete);
 mnrouter.patch("/:id/archive", requireAuth, todoAccess, todoController.archive);

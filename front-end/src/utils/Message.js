@@ -11,6 +11,7 @@
     INVALID_EMAIL : "L'email est obligatoire et doit être valide.",
     PASSWORD_MIN_CARACTERE : "Le mot de passe doit contenir au moins 2 caractères.",
     MAIL_EXISTTE :"Cet email est déjà utilisé. Veuillez vous connecter ou choisir un autre email.",
+    MOT_de_passe_different :"Les mots de passe ne correspondent pas.",
 
 
     //TODOS

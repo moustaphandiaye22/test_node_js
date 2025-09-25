@@ -21,7 +21,7 @@ const TodoHistory = ({ historique, users, error }) => (
             const user = users.find(u => u.id === item.userId);
             return (
               <tr key={item.id} className="hover:bg-green-50 transition">
-                <td className="px-5 py-4 text-blue-700 font-medium">{item.action}</td>
+                <td className="px-5 py-4 text-green-700 font-medium">{item.action}</td>
                 <td className="px-5 py-4 text-gray-700">{user ? user.nom || user.name || user.email : item.userId}</td>
                 <td className="px-5 py-4 text-gray-700">{item.todoId || '-'}</td>
               </tr>

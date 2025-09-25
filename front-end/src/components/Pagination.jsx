@@ -11,7 +11,7 @@ const Pagination = ({ page, totalPages, setPage, perPage, setPerPage }) => {
         >
           Précédent
         </button>
-        <span className="px-3 py-2 text-lg font-bold text-blue-700">
+        <span className="px-3 py-2 text-lg font-bold text-green-700">
           Page {page} / {totalPages}
         </span>
         <button

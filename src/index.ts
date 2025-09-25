@@ -6,9 +6,11 @@ import todoroute from "./routes/todoRoute.js";
 import userroute from "./routes/userRoute.js";
 import authroute from "./routes/authRoute.js";
 import historiqueRouter from "./routes/historiqueRoute.js";
+import notifRouter from "./routes/notificationRoute.js";
 const app = express();
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use("/assets", express.static("assets"));
+app.use("/audio", express.static("audio"));
 const swaggerOptions = {
     definition: {
         openapi: "3.0.0",
@@ -33,6 +35,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Les routes qui acceptent des fichiers (multer) doivent venir AVANT express.json()
 app.use('/api/todo', todoroute);
 app.use('/api/user', userroute);
+app.use('/api/notifications', notifRouter);
 // Les autres routes peuvent utiliser express.json()
 app.use(express.json());
 app.use('/api/auth', authroute);

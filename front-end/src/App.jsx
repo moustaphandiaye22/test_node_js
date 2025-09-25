@@ -5,7 +5,6 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Todos from './pages/Todos';
-// import Historique from './pages/Historique';
 import Header from './components/Header';
 import './App.css';
 

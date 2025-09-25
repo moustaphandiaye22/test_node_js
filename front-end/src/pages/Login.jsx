@@ -60,7 +60,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100">
       <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md flex flex-col items-center">
-        <h2 className="text-3xl font-bold mb-6 text-blue-700">Connexion</h2>
+        <h2 className="text-3xl font-bold mb-6 text-green-700">Connexion</h2>
         <form className="flex flex-col gap-5 w-full" onSubmit={handleSubmit(onSubmit)}>
           <FormInput
             name="email"
@@ -82,16 +82,16 @@ const Login = () => {
               autoComplete="current-password"
             />
             <button type="button" onClick={() => setShowPassword(v => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 text-sm focus:outline-none">
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 text-sm focus:outline-none">
               {showPassword ? 'Cacher' : 'Voir'}
             </button>
           </div>
           {error && <div className="text-red-500 text-center font-semibold">{error}</div>}
-          <button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-bold shadow transition disabled:opacity-60 disabled:cursor-not-allowed">
+          <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl font-bold shadow transition disabled:opacity-60 disabled:cursor-not-allowed">
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
-        <button className="mt-6 underline text-blue-600 hover:text-blue-800" onClick={() => navigate('/register')}>Créer un compte</button>
+        <button className="mt-6 underline text-green-600 hover:text-green-800" onClick={() => navigate('/register')}>Créer un compte</button>
       </div>
     </div>
   );
