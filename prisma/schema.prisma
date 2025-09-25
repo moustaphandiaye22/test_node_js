@@ -1,3 +1,4 @@
+
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -15,13 +16,20 @@ datasource db {
 model todo {
   id        Int      @id @default(autoincrement())
   title     String
+  description String?
+  imageUrl  String?
+  audioUrl  String?
   completed Boolean  @default(false)
+  archived  Boolean  @default(false)
+  startDate DateTime @default(now())
+  endDate   DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId    Int
   historiques Historique[]
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
   shares    TodoShare[]
+  notifications Notification[]
 }
 enum Role {
   USER
@@ -40,6 +48,7 @@ model user {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   sharedTodos TodoShare[]
+  notifications Notification[]
 }
 
 model TodoShare {
@@ -60,4 +69,14 @@ model Historique {
   timestamp DateTime @default(now())
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
   todo      todo     @relation(fields: [todoId], references: [id], onDelete: Cascade)
+}
+model Notification {
+  id        Int      @id @default(autoincrement())
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  todo      todo?    @relation(fields: [todoId], references: [id], onDelete: Cascade)
+  todoId    Int?
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

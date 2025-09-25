@@ -1,41 +1,45 @@
 # test_node_js
 
 ## Description
-Ce projet est une API RESTful de gestion de tâches (todos) avec authentification, partage de tâches, gestion d'utilisateurs et historique des actions. Il utilise Node.js, Express, TypeScript et Prisma avec une base de données MySQL.
+Ce projet est une application complète de gestion de tâches (todos) avec un backend Node.js/Express/Prisma et un frontend React/Vite.
 
-## Fonctionnalités principales
+---
+
+# Backend
+
+## Fonctionnalités
 - Authentification JWT
-- Gestion des utilisateurs (CRUD, upload d'image)
-- Gestion des tâches (CRUD, partage, marquer comme complétée)
+- Gestion des utilisateurs (CRUD, upload d'image, rôles)
+- Gestion des tâches (CRUD, partage, marquer comme complétée, fichiers image/audio)
 - Historique des actions
+- Notifications
 - Documentation Swagger
 
 ## Installation
 1. Cloner le dépôt :
-	 ```bash
-	 git clone <repo-url>
-	 cd test_node_js
-	 ```
+   ```bash
+   git clone <repo-url>
+   cd test_node_js
+   ```
 2. Installer les dépendances :
-	 ```bash
-	 npm install
-	 ```
-3. Configurer la base de données dans le fichier `.env` :
-	 ```env
-	 DATABASE_URL="mysql://user:password@localhost:3306/nom_de_la_db"
-	 ```
+   ```bash
+   npm install
+   ```
+3. Configurer la base de données dans `.env` :
+   ```env
+   DATABASE_URL="mysql://user:password@localhost:3306/nom_de_la_db"
+   ```
 4. Générer le client Prisma et migrer la base :
-	 ```bash
-	 npm run generate
-	 npm run migrate
-	 ```
+   ```bash
+   npx prisma generate
+   npx prisma migrate dev
+   ```
 5. Lancer le serveur :
-	 ```bash
-	 npm run dev
-	 ```
+   ```bash
+   npm run dev
+   ```
 
-## Structure du projet
-
+## Structure du backend
 ```
 ├── src/
 │   ├── index.ts                # Point d'entrée principal
@@ -53,98 +57,114 @@ Ce projet est une API RESTful de gestion de tâches (todos) avec authentificatio
 │   ├── migrations/             # Migrations SQL
 │   ├── seeds.js                # Seed de données
 ├── assets/                     # Images uploadées
+├── audio/                      # Fichiers audio
 ├── package.json                # Dépendances et scripts
 ├── tsconfig.json               # Config TypeScript
 ```
 
-## Principales routes
+## Principales routes API
 
 ### Authentification
-- `POST /auth/login` : Connexion
-- `POST /auth/refresh-token` : Rafraîchir le token
-- `POST /auth/logout` : Déconnexion
+- `POST /api/auth/login` : Connexion
+- `POST /api/auth/refresh-token` : Rafraîchir le token
+- `POST /api/auth/logout` : Déconnexion
 
 ### Utilisateurs
-- `GET /users` : Liste des utilisateurs
-- `GET /users/:id` : Détail utilisateur
-- `POST /users` : Création
-- `PUT /users/:id` : Modification
-- `DELETE /users/:id` : Suppression
-- `POST /users/:id/upload-image` : Upload d'image de profil
+- `GET /api/user` : Liste des utilisateurs
+- `GET /api/user/:id` : Détail utilisateur
+- `POST /api/user` : Création
+- `PUT /api/user/:id` : Modification
+- `DELETE /api/user/:id` : Suppression
+- `POST /api/user/:id/upload-image` : Upload d'image de profil
+- `GET /api/user/:id/shared-todos` : Todos partagés avec l'utilisateur
 
 ### Todos
-- `GET /todos` : Liste des tâches
-- `GET /todos/:id` : Détail tâche
-- `POST /todos` : Création
-- `PUT /todos/:id` : Modification
-- `DELETE /todos/:id` : Suppression
-- `PATCH /todos/:id/complete` : Marquer comme complétée
-- `POST /todos/:id/share` : Partager une tâche
+- `GET /api/todo` : Liste des tâches
+- `GET /api/todo/:id` : Détail tâche
+- `POST /api/todo` : Création
+- `PUT /api/todo/:id` : Modification
+- `DELETE /api/todo/:id` : Suppression
+- `PATCH /api/todo/:id/complete` : Marquer comme complétée
+- `PATCH /api/todo/:id/archive` : Archiver
+- `PATCH /api/todo/:id/unarchive` : Désarchiver
+- `POST /api/todo/:id/share` : Partager une tâche
 
 ### Historique
-- `GET /historique` : Liste des actions
-- `POST /historique` : Ajouter une action
-- `PUT /historique/:id` : Modifier une action
-- `DELETE /historique/:id` : Supprimer une action
+- `GET /api/historique` : Liste des actions
+- `POST /api/historique` : Ajouter une action
+- `PUT /api/historique/:id` : Modifier une action
+- `DELETE /api/historique/:id` : Supprimer une action
+
+### Notifications
+- `GET /api/notifications/:userId` : Notifications d'un utilisateur
+- `PATCH /api/notifications/:id/read` : Marquer comme lue
 
 ### Documentation API
 - Swagger disponible sur : `GET /api-docs`
 
 ## Schéma de la base de données (Prisma)
 
-```prisma
-model user {
-	id        Int      @id @default(autoincrement())
-	email     String   @unique
-	password  String
-	name      String?
-	imageUrl  String?
-	todos     todo[]
-	historiques Historique[]
-	role      Role   @default(USER)
-	createdAt DateTime @default(now())
-	updatedAt DateTime @updatedAt
-	sharedTodos TodoShare[]
-}
+Voir le fichier `prisma/schema.prisma` pour le schéma complet.
 
-model todo {
-	id        Int      @id @default(autoincrement())
-	title     String
-	completed Boolean  @default(false)
-	createdAt DateTime @default(now())
-	updatedAt DateTime @updatedAt
-	userId    Int
-	historiques Historique[]
-	user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
-	shares    TodoShare[]
-}
+---
 
-model TodoShare {
-	id        Int      @id @default(autoincrement())
-	todo      todo     @relation(fields: [todoId], references: [id], onDelete: Cascade)
-	todoId    Int
-	user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
-	userId    Int
-	canEdit   Boolean  @default(false)
-	canDelete Boolean  @default(false)
-	createdAt DateTime @default(now())
-}
+# Frontend
 
-model Historique {
-	id        Int      @id @default(autoincrement())
-	action    String
-	userId    Int
-	todoId    Int
-	timestamp DateTime @default(now())
-	user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
-	todo      todo     @relation(fields: [todoId], references: [id], onDelete: Cascade)
-}
+## Fonctionnalités
+- Application React avec Vite
+- Authentification et gestion de session
+- Affichage, création, édition, suppression de tâches
+- Partage de tâches entre utilisateurs
+- Upload d'image et d'audio
+- Pagination, filtres, onglets
+- Historique des actions
+- Notifications
+- UI moderne avec Tailwind CSS
 
-enum Role {
-	USER
-	ADMIN
-}
+## Installation
+1. Aller dans le dossier `front-end` :
+   ```bash
+   cd front-end
+   ```
+2. Installer les dépendances :
+   ```bash
+   npm install
+   ```
+3. Lancer le serveur de développement :
+   ```bash
+   npm run dev
+   ```
+
+## Structure du frontend
 ```
+front-end/
+├── src/
+│   ├── App.jsx                # Composant principal
+│   ├── main.jsx               # Point d'entrée
+│   ├── components/            # Composants réutilisables (TodoCard, Form, Header...)
+│   ├── pages/                 # Pages (Login, Register, Todos, Dashboard...)
+│   ├── hooks/                 # Hooks personnalisés
+│   ├── utils/                 # Fonctions utilitaires
+│   ├── assets/                # Images
+│   ├── index.css, App.css     # Styles
+├── public/                    # Fichiers statiques
+├── package.json               # Dépendances et scripts
+├── tailwind.config.js         # Config Tailwind
+├── vite.config.js             # Config Vite
+```
+
+## Pages principales
+- `/login` : Connexion
+- `/register` : Inscription
+- `/dashboard` : Tableau de bord
+- `/todos` : Liste et gestion des tâches
+
+## Fonctionnement général
+- Le frontend communique avec l’API backend via fetch/axios.
+- La gestion d’état se fait avec React et des hooks personnalisés.
+- Les formulaires utilisent `react-hook-form`.
+- La navigation est gérée par `react-router-dom`.
+- Les notifications et historiques sont affichés en temps réel.
 
 ## Auteur
 Moustapha Ndiaye

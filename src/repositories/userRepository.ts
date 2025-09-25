@@ -22,7 +22,6 @@ export class UserRepository implements InterfaceRepository<any> {
     }
 
     async create(data: any) {
-        // Hash le mot de passe avant création
         const hashedPassword = await bcrypt.hash(data.password, 10);
         const userData = { ...data, password: hashedPassword };
         return mnprisma.user.create({ data: userData });

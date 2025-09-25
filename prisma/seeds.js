@@ -4,12 +4,14 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  // Nettoyage des tables dépendantes (ordre: Historique, TodoShare, todo, user)
+  // Nettoyage complet
+  await prisma.notification.deleteMany();
   await prisma.historique.deleteMany();
   await prisma.todoShare.deleteMany();
   await prisma.todo.deleteMany();
-  // On ne supprime pas les users pour garder les upsert
-  // Hashage des mots de passe
+  await prisma.user.deleteMany();
+
+  // USERS
   const users = [
     {
       email: 'admin@example.com',
@@ -33,65 +35,115 @@ async function main() {
       imageUrl: '/assets/1756577816678.jpeg',
     },
   ];
+  const createdUsers = [];
   for (const user of users) {
-    await prisma.user.upsert({
-      where: { email: user.email },
-      update: {
-        password: user.password,
-        name: user.name,
-        role: user.role,
-        imageUrl: user.imageUrl,
-      },
-      create: user,
-    });
+    const u = await prisma.user.create({ data: user });
+    createdUsers.push(u);
   }
 
-  // Création des todos un par un pour récupérer les IDs
-  const todo1 = await prisma.todo.create({
-    data: {
+  // TODOS
+  const todos = [
+    {
       title: 'Learn TypeScript',
+      description: 'Apprendre les bases de TS',
+      imageUrl: '/assets/IMG_E5839.JPG',
+      audioUrl: '/audio/1758712887807-458939652.webm',
       completed: false,
-      userId: 1,
+      archived: false,
+      startDate: new Date(),
+      endDate: new Date(),
+      userId: createdUsers[0].id,
     },
-  });
-  const todo2 = await prisma.todo.create({
-    data: {
+    {
       title: 'Build a Node.js API',
+      description: 'Créer une API REST',
+      imageUrl: '/assets/IMG_1036.JPG',
+      audioUrl: '/audio/1758713014629-894913756.webm',
       completed: false,
-      userId: 2,
+      archived: false,
+      startDate: new Date(),
+      endDate: new Date(),
+      userId: createdUsers[1].id,
     },
-  });
-  const todo3 = await prisma.todo.create({
-    data: {
+    {
       title: 'Write documentation',
+      description: 'Rédiger la doc',
+      imageUrl: '/assets/1756577816678.jpeg',
+      audioUrl: null,
       completed: true,
-      userId: 3,
+      archived: false,
+      startDate: new Date(),
+      endDate: new Date(),
+      userId: createdUsers[2].id,
     },
+  ];
+  const createdTodos = [];
+  for (const todo of todos) {
+    const t = await prisma.todo.create({ data: todo });
+    createdTodos.push(t);
+  }
+
+  // TODO SHARES
+  await prisma.todoShare.createMany({
+    data: [
+      {
+        todoId: createdTodos[0].id,
+        userId: createdUsers[1].id,
+        canEdit: true,
+        canDelete: false,
+      },
+      {
+        todoId: createdTodos[1].id,
+        userId: createdUsers[2].id,
+        canEdit: false,
+        canDelete: true,
+      },
+    ],
   });
 
+  // HISTORIQUE
   await prisma.historique.createMany({
     data: [
       {
-        userId: 1,
+        userId: createdUsers[0].id,
         action: 'CREATE',
-        todoId: todo1.id,
+        todoId: createdTodos[0].id,
         timestamp: new Date(),
       },
       {
-        userId: 2,
+        userId: createdUsers[1].id,
         action: 'CREATE',
-        todoId: todo2.id,
+        todoId: createdTodos[1].id,
         timestamp: new Date(),
       },
       {
-        userId: 3,
+        userId: createdUsers[2].id,
         action: 'CREATE',
-        todoId: todo3.id,
+        todoId: createdTodos[2].id,
         timestamp: new Date(),
       },
     ],
   });
-  console.log('Seed data inserted');
+
+  // NOTIFICATIONS
+  await prisma.notification.createMany({
+    data: [
+      {
+        userId: createdUsers[0].id,
+        todoId: createdTodos[0].id,
+        message: 'Votre todo a été créé',
+        read: false,
+      },
+      {
+        userId: createdUsers[1].id,
+        todoId: createdTodos[1].id,
+        message: 'Votre todo a été partagé',
+        read: false,
+      },
+    ],
+  });
+
+  console.log('Seed complet inséré');
 }
 
 main()
